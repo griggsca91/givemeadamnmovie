@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package movies.v1;
+
+message GetMovieRecommendationRequest {
+}
+
+message GetMovieRecommendationResponse {
+    Movie movie = 1;
+}
+
+message Movie {
+    string title = 1;
+    string description = 2;
+    string image_url = 3;
+}
+
+service MoviesService {
+  rpc GetMovieRecommendation(GetMovieRecommendationRequest) returns (GetMovieRecommendationResponse) {}
+}
