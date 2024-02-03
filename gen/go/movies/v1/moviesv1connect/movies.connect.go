@@ -36,17 +36,21 @@ const (
 	// MoviesServiceGetMovieRecommendationProcedure is the fully-qualified name of the MoviesService's
 	// GetMovieRecommendation RPC.
 	MoviesServiceGetMovieRecommendationProcedure = "/movies.v1.MoviesService/GetMovieRecommendation"
+	// MoviesServiceGetMovieProcedure is the fully-qualified name of the MoviesService's GetMovie RPC.
+	MoviesServiceGetMovieProcedure = "/movies.v1.MoviesService/GetMovie"
 )
 
 // These variables are the protoreflect.Descriptor objects for the RPCs defined in this package.
 var (
 	moviesServiceServiceDescriptor                      = v1.File_movies_v1_movies_proto.Services().ByName("MoviesService")
 	moviesServiceGetMovieRecommendationMethodDescriptor = moviesServiceServiceDescriptor.Methods().ByName("GetMovieRecommendation")
+	moviesServiceGetMovieMethodDescriptor               = moviesServiceServiceDescriptor.Methods().ByName("GetMovie")
 )
 
 // MoviesServiceClient is a client for the movies.v1.MoviesService service.
 type MoviesServiceClient interface {
 	GetMovieRecommendation(context.Context, *connect.Request[v1.GetMovieRecommendationRequest]) (*connect.Response[v1.GetMovieRecommendationResponse], error)
+	GetMovie(context.Context, *connect.Request[v1.GetMovieRequest]) (*connect.Response[v1.GetMovieResponse], error)
 }
 
 // NewMoviesServiceClient constructs a client for the movies.v1.MoviesService service. By default,
@@ -65,12 +69,19 @@ func NewMoviesServiceClient(httpClient connect.HTTPClient, baseURL string, opts 
 			connect.WithSchema(moviesServiceGetMovieRecommendationMethodDescriptor),
 			connect.WithClientOptions(opts...),
 		),
+		getMovie: connect.NewClient[v1.GetMovieRequest, v1.GetMovieResponse](
+			httpClient,
+			baseURL+MoviesServiceGetMovieProcedure,
+			connect.WithSchema(moviesServiceGetMovieMethodDescriptor),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // moviesServiceClient implements MoviesServiceClient.
 type moviesServiceClient struct {
 	getMovieRecommendation *connect.Client[v1.GetMovieRecommendationRequest, v1.GetMovieRecommendationResponse]
+	getMovie               *connect.Client[v1.GetMovieRequest, v1.GetMovieResponse]
 }
 
 // GetMovieRecommendation calls movies.v1.MoviesService.GetMovieRecommendation.
@@ -78,9 +89,15 @@ func (c *moviesServiceClient) GetMovieRecommendation(ctx context.Context, req *c
 	return c.getMovieRecommendation.CallUnary(ctx, req)
 }
 
+// GetMovie calls movies.v1.MoviesService.GetMovie.
+func (c *moviesServiceClient) GetMovie(ctx context.Context, req *connect.Request[v1.GetMovieRequest]) (*connect.Response[v1.GetMovieResponse], error) {
+	return c.getMovie.CallUnary(ctx, req)
+}
+
 // MoviesServiceHandler is an implementation of the movies.v1.MoviesService service.
 type MoviesServiceHandler interface {
 	GetMovieRecommendation(context.Context, *connect.Request[v1.GetMovieRecommendationRequest]) (*connect.Response[v1.GetMovieRecommendationResponse], error)
+	GetMovie(context.Context, *connect.Request[v1.GetMovieRequest]) (*connect.Response[v1.GetMovieResponse], error)
 }
 
 // NewMoviesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -95,10 +112,18 @@ func NewMoviesServiceHandler(svc MoviesServiceHandler, opts ...connect.HandlerOp
 		connect.WithSchema(moviesServiceGetMovieRecommendationMethodDescriptor),
 		connect.WithHandlerOptions(opts...),
 	)
+	moviesServiceGetMovieHandler := connect.NewUnaryHandler(
+		MoviesServiceGetMovieProcedure,
+		svc.GetMovie,
+		connect.WithSchema(moviesServiceGetMovieMethodDescriptor),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/movies.v1.MoviesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MoviesServiceGetMovieRecommendationProcedure:
 			moviesServiceGetMovieRecommendationHandler.ServeHTTP(w, r)
+		case MoviesServiceGetMovieProcedure:
+			moviesServiceGetMovieHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -110,4 +135,8 @@ type UnimplementedMoviesServiceHandler struct{}
 
 func (UnimplementedMoviesServiceHandler) GetMovieRecommendation(context.Context, *connect.Request[v1.GetMovieRecommendationRequest]) (*connect.Response[v1.GetMovieRecommendationResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("movies.v1.MoviesService.GetMovieRecommendation is not implemented"))
+}
+
+func (UnimplementedMoviesServiceHandler) GetMovie(context.Context, *connect.Request[v1.GetMovieRequest]) (*connect.Response[v1.GetMovieResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("movies.v1.MoviesService.GetMovie is not implemented"))
 }

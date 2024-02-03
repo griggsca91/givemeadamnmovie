@@ -9,6 +9,14 @@ message GetMovieRecommendationResponse {
     Movie movie = 1;
 }
 
+message GetMovieRequest {
+    string movie_id = 1;
+}
+
+message GetMovieResponse {
+    Movie movie = 1;
+}
+
 message Movie {
     string title = 1;
     string description = 2;
@@ -17,4 +25,5 @@ message Movie {
 
 service MoviesService {
   rpc GetMovieRecommendation(GetMovieRecommendationRequest) returns (GetMovieRecommendationResponse) {}
+  rpc GetMovie(GetMovieRequest) returns (GetMovieResponse) {}
 }
